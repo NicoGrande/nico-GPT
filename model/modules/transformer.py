@@ -43,13 +43,15 @@ class Transformer(nn.Module):
 
         # Transformer layers
         self.layers = nn.Sequential(
-            [
-                (
-                    SelfAttention(hidden_size, num_heads, dropout, is_decoder),
-                    FeedForward(hidden_size, dropout),
-                )
-                for _ in range(num_layers)
-            ]
+            nn.ModuleList(
+                [
+                    nn.Sequential(
+                        SelfAttention(hidden_size, num_heads, dropout, is_decoder),
+                        FeedForward(hidden_size, dropout),
+                    )
+                    for _ in range(num_layers)
+                ]
+            )
         )
 
         # Output projection

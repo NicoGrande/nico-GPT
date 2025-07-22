@@ -97,7 +97,7 @@ class SelfAttention(nn.Module):
         )
 
         # Project the attention output to the hidden size (B x N x D)
-        attn_out = self.out_proj(attn_out)
+        attn_out = self.dropout(self.out_proj(attn_out))
 
         # Residual connection
         return self.layer_norm(attn_out + x)
