@@ -32,6 +32,7 @@ class Embeddings(nn.Module):
         self.hidden_size = hidden_size
         self.vocab_size = vocab_size
         self.embedding = nn.Embedding(vocab_size, hidden_size)
+        self.layer_norm = nn.LayerNorm(hidden_size)
 
         if pos_embedding_type == PositionalEncodingType.SINUSOIDAL:
             self.pos_embedding = self.get_sinusoidal_encoding(vocab_size, hidden_size)
@@ -68,4 +69,11 @@ class Embeddings(nn.Module):
         Returns:
             torch.Tensor: The embeddings of the input tokens.
         """
-        return self.embedding(x) + self.pos_embedding
+        # Get the token embeddings (B x N x D)
+        token_embeddings = self.embedding(x)
+
+        # Get the positional embeddings (1 x N x D)
+        pos_embeddings = self.pos_embedding[: x.size(1), :].unsqueeze(0)
+
+        # Return the layer normalized embeddings
+        return self.layer_norm(token_embeddings + pos_embeddings)
