@@ -8,7 +8,18 @@ class ActivationBase(abc.ABC):
         super().__init__()
 
     def __call__(self, x: np.ndarray):
-        """Apply the activation function to an input"""
+        """Apply the activation function to an input.
+
+        This method serves as a convenient interface to the forward method,
+        handling input shape normalization for 1D inputs.
+
+        Args:
+            x (np.ndarray): Input tensor of shape (B, D) or (D,) where B is the
+                batch size and D is the feature dimension.
+
+        Returns:
+            np.ndarray: Activated output with the same shape as the normalized input.
+        """
         if x.ndim == 1:
             x = x.reshape(1, -1)
         return self.forward(x)
@@ -27,6 +38,7 @@ class ActivationBase(abc.ABC):
 class ReLU(ActivationBase):
     def __init__(self):
         super().__init__()
+        self._last_input = None
 
     def __repr__(self) -> str:
         return "ReLU"
@@ -42,6 +54,8 @@ class ReLU(ActivationBase):
             np.ndarray: Tensor of the same shape as x with the ReLU function applied
                 element-wise.
         """
+        # Store input for backward pass
+        self._last_input = x
         return x * (x > 0)
 
     def backward(self, grads: np.ndarray) -> np.ndarray:
@@ -55,13 +69,17 @@ class ReLU(ActivationBase):
             np.ndarray: Gradient of the loss with respect to the input dL/dx with the
                 same shape as grads.
         """
-        return 1.0 * (grads > 0)
+        if self._last_input is None:
+            raise ValueError("forward must be called before backward.")
+        # Derivative of ReLU: 1 where input > 0, 0 elsewhere
+        return grads * (self._last_input > 0)
 
 
 class LeakyRelu(ActivationBase):
     def __init__(self, alpha: float = 0.3):
         super().__init__()
         self.alpha = alpha
+        self._last_input = None
 
     def __repr__(self) -> str:
         return f"LeakyReLU(alpha={self.alpha})"
@@ -76,6 +94,7 @@ class LeakyRelu(ActivationBase):
             np.ndarray: Activated output with the same shape as x where negative values
                 are scaled by alpha.
         """
+        self._last_input = x
         x_copy = x.copy()
         x_copy[x < 0] = x_copy[x < 0] * self.alpha
         return x_copy
@@ -90,14 +109,18 @@ class LeakyRelu(ActivationBase):
             np.ndarray: dL/dx with the same shape as grads. Gradients flowing
                 through negative activations are scaled by alpha.
         """
-        g = np.ones_like(grads)
-        g[grads < 0] = self.alpha
-        return g
+        if self._last_input is None:
+            raise ValueError("forward must be called before backward.")
+
+        d_relu = np.ones_like(grads)
+        d_relu[self._last_input < 0] = self.alpha
+        return grads * d_relu
 
 
 class Sigmoid(ActivationBase):
     def __init__(self):
         super().__init__()
+        self._last_input = None
 
     def __repr__(self) -> str:
         return "Sigmoid"
@@ -112,6 +135,7 @@ class Sigmoid(ActivationBase):
             np.ndarray: Tensor of the same shape as x with the Sigmoid function applied
                 element-wise.
         """
+        self._last_input = x
         return 1 / (1 + (np.exp(-x)))
 
     def backward(self, grads: np.ndarray):
@@ -123,7 +147,14 @@ class Sigmoid(ActivationBase):
         Returns:
             np.ndarray: dL/dx with the same shape as grads.
         """
-        return (1 / (1 + (np.exp(-grads)))) * (1 - (1 / (1 + (np.exp(-grads)))))
+        if self._last_input is None:
+            raise ValueError("forward must be called before backward.")
+
+        return (
+            grads
+            * (1 / (1 + (np.exp(-self._last_input))))
+            * (1 - (1 / (1 + (np.exp(-self._last_input)))))
+        )
 
 
 class Softmax(ActivationBase):

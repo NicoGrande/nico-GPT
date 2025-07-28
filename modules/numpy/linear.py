@@ -59,8 +59,8 @@ class Linear:
         if self._last_input is None:
             raise ValueError("forward must be called before backward.")
 
-        # (D_in x B) x (B x D_out) -> (D_in x D_out)
-        d_W = self._last_input.T @ grads
+        # (D_out x B) x (B x D_in) -> (D_out x D_in)
+        d_W = grads.T @ self._last_input
 
         # (B x D_out) -> (D_out)
         d_b = grads.sum(axis=0)

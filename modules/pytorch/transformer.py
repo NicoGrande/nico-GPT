@@ -3,9 +3,9 @@
 import torch
 import torch.nn as nn
 
-from model.modules.pytorch.embeddings import Embeddings
-from model.modules.pytorch.self_attention import SelfAttention
-from model.modules.pytorch.feed_forward import FeedForward
+from modules.pytorch.embeddings import Embeddings
+from modules.pytorch.self_attention import SelfAttention
+from modules.pytorch.feed_forward import FeedForward
 
 
 class Transformer(nn.Module):
