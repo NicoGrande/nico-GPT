@@ -1,3 +1,10 @@
+"""Objective functions for machine learning models.
+
+This module provides various loss functions commonly used in machine learning,
+including regression losses (MAE, MSE) and classification losses (Cross-entropy).
+All objective functions inherit from a common ObjectiveBase interface.
+"""
+
 import abc
 import enum
 import numpy as np
@@ -46,11 +53,11 @@ class ObjectiveBase(abc.ABC):
         """Apply the objective function to compute loss.
 
         Args:
-            preds: Model predictions as a numpy array.
-            labels: Ground truth labels as a numpy array.
+            preds (np.ndarray): Model predictions as a numpy array.
+            labels (np.ndarray): Ground truth labels as a numpy array.
 
         Returns:
-            The computed loss value as a float.
+            float: The computed loss value.
 
         Raises:
             NotImplementedError: This method must be implemented by subclasses.
@@ -62,11 +69,11 @@ class ObjectiveBase(abc.ABC):
         """Compute the gradient of the objective function w.r.t the predictions.
 
         Args:
-            preds: Model predictions as a numpy array.
-            labels: Ground truth labels as a numpy array.
+            preds (np.ndarray): Model predictions as a numpy array.
+            labels (np.ndarray): Ground truth labels as a numpy array.
 
         Returns:
-            Gradient of the loss with respect to predictions as a numpy array.
+            np.ndarray: Gradient of the loss with respect to predictions.
 
         Raises:
             NotImplementedError: This method must be implemented by subclasses.
@@ -89,7 +96,7 @@ class MAELoss(ObjectiveBase):
         """Return string representation of the MAELoss object.
 
         Returns:
-            String representation of the loss function.
+            str: String representation of the loss function.
         """
         return "MAELoss"
 
@@ -97,11 +104,11 @@ class MAELoss(ObjectiveBase):
         """Compute the Mean Absolute Error loss.
 
         Args:
-            preds: Model predictions as a numpy array.
-            labels: Ground truth labels as a numpy array.
+            preds (np.ndarray): Model predictions as a numpy array.
+            labels (np.ndarray): Ground truth labels as a numpy array.
 
         Returns:
-            The computed MAE loss value as a float.
+            float: The computed MAE loss value.
         """
         return np.mean(np.abs(labels - preds))
 
@@ -109,12 +116,12 @@ class MAELoss(ObjectiveBase):
         """Compute the gradient of MAE loss w.r.t predictions.
 
         Args:
-            preds: Model predictions as a numpy array.
-            labels: Ground truth labels as a numpy array.
+            preds (np.ndarray): Model predictions as a numpy array.
+            labels (np.ndarray): Ground truth labels as a numpy array.
 
         Returns:
-            Gradient of MAE loss with respect to predictions as a numpy array.
-            The gradient is the sign of (preds - labels) / N.
+            np.ndarray: Gradient of MAE loss with respect to predictions.
+                The gradient is the sign of (preds - labels) / N.
         """
         return np.sign(preds - labels) / preds.size
 
@@ -134,7 +141,7 @@ class MSELoss(ObjectiveBase):
         """Return string representation of the MSELoss object.
 
         Returns:
-            String representation of the loss function.
+            str: String representation of the loss function.
         """
         return "MSELoss"
 
@@ -142,11 +149,11 @@ class MSELoss(ObjectiveBase):
         """Compute the Mean Squared Error loss.
 
         Args:
-            preds: Model predictions as a numpy array.
-            labels: Ground truth labels as a numpy array.
+            preds (np.ndarray): Model predictions as a numpy array.
+            labels (np.ndarray): Ground truth labels as a numpy array.
 
         Returns:
-            The computed MSE loss value as a float.
+            float: The computed MSE loss value.
         """
         return np.mean((labels - preds) ** 2)
 
@@ -154,12 +161,12 @@ class MSELoss(ObjectiveBase):
         """Compute the gradient of MSE loss w.r.t predictions.
 
         Args:
-            preds: Model predictions as a numpy array.
-            labels: Ground truth labels as a numpy array.
+            preds (np.ndarray): Model predictions as a numpy array.
+            labels (np.ndarray): Ground truth labels as a numpy array.
 
         Returns:
-            Gradient of MSE loss with respect to predictions as a numpy array.
-            The gradient is 2 * (preds - labels) / N.
+            np.ndarray: Gradient of MSE loss with respect to predictions.
+                The gradient is 2 * (preds - labels) / N.
         """
         return 2 * (preds - labels) / preds.size
 
@@ -179,8 +186,8 @@ class CrossEntropyLoss(ObjectiveBase):
         """Initialize the CrossEntropyLoss object.
 
         Args:
-            reduction: Method for reducing the loss across samples. Can be 'mean', 'sum',
-                or a Reduction enum value. Defaults to 'mean'.
+            reduction (str | Reduction): Method for reducing the loss across samples. 
+                Can be 'mean', 'sum', or a Reduction enum value. Defaults to 'mean'.
         """
         super().__init__()
         if isinstance(reduction, str):
@@ -192,7 +199,7 @@ class CrossEntropyLoss(ObjectiveBase):
         """Return string representation of the CrossEntropyLoss object.
 
         Returns:
-            String representation of the loss function.
+            str: String representation of the loss function.
         """
         return "CrossEntropyLoss"
 
@@ -200,11 +207,11 @@ class CrossEntropyLoss(ObjectiveBase):
         """Compute the cross-entropy loss.
 
         Args:
-            preds: Model predictions (probabilities) as a numpy array.
-            labels: Ground truth labels as a numpy array.
+            preds (np.ndarray): Model predictions (probabilities) as a numpy array.
+            labels (np.ndarray): Ground truth labels as a numpy array.
 
         Returns:
-            The computed cross-entropy loss value as a float.
+            float: The computed cross-entropy loss value.
         """
         denominator = (
             1 if self._reduction == Reduction.SUM else preds.shape[0]
@@ -216,12 +223,12 @@ class CrossEntropyLoss(ObjectiveBase):
         """Compute the gradient of cross-entropy loss w.r.t predictions.
 
         Args:
-            preds: Model predictions (probabilities) as a numpy array.
-            labels: Ground truth labels as a numpy array.
+            preds (np.ndarray): Model predictions (probabilities) as a numpy array.
+            labels (np.ndarray): Ground truth labels as a numpy array.
 
         Returns:
-            Gradient of cross-entropy loss with respect to predictions as a numpy array.
-            The gradient is -labels / (preds * denominator).
+            np.ndarray: Gradient of cross-entropy loss with respect to predictions.
+                The gradient is -labels / (preds * denominator).
         """
         denominator = (
             1 if self._reduction == Reduction.SUM else preds.shape[0]
